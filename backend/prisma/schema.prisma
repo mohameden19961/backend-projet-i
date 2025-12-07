@@ -7,4 +7,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Abdi complètera ici les modèles : User, Exam, ExamStudent, Submission, MonitoringLog
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      String
+  createdAt DateTime @default(now())
+  examsCreated    Exam[]         @relation("ProfessorExams")
+  examEnrollments ExamStudent[]
+  submissions     Submission[]
+  logs            MonitoringLog[]
+}
+
+model Exam {
+  id          Int      @id @default(autoincrement())
+  title       String
+  accessCode  String   @unique
+  scheduledAt DateTime
+  duration    Int
+  createdAt   DateTime @default(now())
+  professorId Int
+  professor   User @relation("ProfessorExams", fields: [professorId], references: [id])
+  students    ExamStudent[]
+  submissions Submission[]
+  logs        MonitoringLog[]
+}
+
+model ExamStudent {
+  id        Int      @id @default(autoincrement())
+  joinedAt  DateTime @default(now())
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id])
+  examId    Int
+  exam      Exam @relation(fields: [examId], references: [id])
+  @@unique([studentId, examId])
+}
+
+model Submission {
+  id        Int      @id @default(autoincrement())
+  filePath  String
+  submittedAt DateTime @default(now())
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id])
+  examId    Int
+  exam      Exam @relation(fields: [examId], references: [id])
+}
+
+model MonitoringLog {
+  id        Int      @id @default(autoincrement())
+  event     String
+  details   String?
+  timestamp DateTime @default(now())
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id])
+  examId    Int
+  exam      Exam @relation(fields: [examId], references: [id])
+}
