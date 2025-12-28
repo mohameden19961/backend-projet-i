@@ -1,0 +1,86 @@
+===========================================================
+DOCUMENTATION API - SYSTÈME DE GESTION D'EXAMENS (V3.0 FINAL)
+===========================================================
+Auteur: Backend Team
+Base URL: http://localhost:3000
+Authentification: Bearer Token (JWT)
+Dernière mise à jour: 28/12/2025
+
+-----------------------------------------------------------
+1. GESTION DES UTILISATEURS (AUTH & CRUD)
+-----------------------------------------------------------
+
+[CREATE] POST /api/auth/register
+  - Description: Inscription d'un nouvel utilisateur.
+  - Body: { "nom", "email", "password", "role", "matricule" }
+
+[READ] POST /api/auth/login
+  - Description: Connexion et génération du Token.
+  - Body: { "email": "moustafa1@supnum.mr", "password": "..." }
+  - Réponse: { "token": "eyJhbGci...", "user": { "id": 17, "nom": "Professeur Moustafa", "role": "prof" } }
+
+[UPDATE] PUT /api/auth/users/:id
+  - Description: Modifier un profil.
+  - Log: "Modification de l'examen ID 1" (ou modification user).
+
+[DELETE] DELETE /api/auth/users/:id
+  - Description: Supprimer un utilisateur.
+  - Exemple Log: "A supprimé l'utilisateur ID 16".
+
+[ACTION] POST /api/auth/logout
+  - Description: Déconnexion et enregistrement final.
+  - Header: Authorization: Bearer <votre_token>
+  - Réponse: {"message": "Déconnexion réussie et log enregistrée"}.
+
+-----------------------------------------------------------
+2. GESTION DES EXAMENS (CRUD)
+-----------------------------------------------------------
+
+[CREATE] POST /api/exams/create
+  - Body: { "titre", "description", "date_fin" }
+  - Exemple Log: "Création de l'examen : Examen Final..."
+
+[READ] GET /api/exams
+  - Description: Liste complète des examens disponibles.
+
+[DELETE] DELETE /api/exams/:id
+  - Description: Suppression d'un examen par un Professeur.
+
+-----------------------------------------------------------
+3. TRAVAUX & UPLOADS (FILES)
+-----------------------------------------------------------
+
+[CREATE] POST /api/works
+  - Description: Upload d'un travail par l'étudiant.
+  - Format: Multipart/Form-Data (Champ "file").
+  - Exemple Log: "Sidi a rendu son travail".
+
+[READ] GET /api/works/download/:filename
+  - Description: Téléchargement du fichier par le professeur.
+  - Exemple: /api/works/download/24099-test.sh
+
+[STORAGE INFO]
+  - Dossier Examens: src/uploads/exams/
+  - Dossier Travaux: src/uploads/work/
+
+-----------------------------------------------------------
+4. AUDIT & MONITORING (LOGS)
+-----------------------------------------------------------
+
+[READ] GET /api/logs
+  - Description: Historique complet des actions système.
+  - Exemple d'entrée: 
+    {
+      "id": 29,
+      "matricule": "moustafa1@supnum.mr",
+      "action": "Déconnexion réussie",
+      "timestamp": "28/12/2025 18:01:14"
+    }
+
+-----------------------------------------------------------
+5. CODES ERREURS COMMUNS
+-----------------------------------------------------------
+- 401: Unauthorized (Token absent ou invalide).
+- 404: Route ou ressource non trouvée (Ex: {"message":"Route non trouvée"}).
+- 500: Erreur Interne du serveur (Base de données SQLite).
+===========================================================
