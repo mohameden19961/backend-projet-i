@@ -2,10 +2,10 @@ const db = require('../database/db');
 
 const Log = {
     
-    add: (matricule, action, callback) => {
-        const sql = `INSERT INTO logs (matricule, action, timestamp) VALUES (?, ?, ?)`;
+    add: (email, action, callback) => {
+        const sql = `INSERT INTO logs (email, action, timestamp) VALUES (?, ?, ?)`;
         const now = new Date().toLocaleString('fr-FR'); // Format de date lisible
-        db.run(sql, [matricule, action, now], callback);
+        db.run(sql, [email, action, now], callback);
     },
 
 

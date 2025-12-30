@@ -56,7 +56,7 @@ db.serialize(() => {
     
     db.run(`CREATE TABLE IF NOT EXISTS logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        matricule TEXT,
+        email TEXT,
         action TEXT,
         timestamp TEXT
     )`, (err) => {

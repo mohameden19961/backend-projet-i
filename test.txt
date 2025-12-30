@@ -1,86 +1,79 @@
-===========================================================
-DOCUMENTATION API - SYSTÈME DE GESTION D'EXAMENS (V3.0 FINAL)
-===========================================================
-Auteur: Backend Team
-Base URL: http://localhost:3000
-Authentification: Bearer Token (JWT)
-Dernière mise à jour: 28/12/2025
+==========================================================
+DOCUMENTATION API COMPLÈTE - SYSTÈME D'EXAMENS (v1.0)
+==========================================================
 
------------------------------------------------------------
-1. GESTION DES UTILISATEURS (AUTH & CRUD)
------------------------------------------------------------
+1. AUTHENTIFICATION ET COMPTES (Auth - CRUD)
+---------------------------------------------
+- Inscription (Create) :
+  POST http://localhost:3000/api/auth/register
+  Body JSON : {"email":"michel@supnum.mr","password":"123","role":"etudiant","matricule":"24133","nom":"Michel"}
 
-[CREATE] POST /api/auth/register
-  - Description: Inscription d'un nouvel utilisateur.
-  - Body: { "nom", "email", "password", "role", "matricule" }
+- Connexion :
+  POST http://localhost:3000/api/auth/login
+  Body JSON : {"email":"michel@supnum.mr","password":"123"}
 
-[READ] POST /api/auth/login
-  - Description: Connexion et génération du Token.
-  - Body: { "email": "moustafa1@supnum.mr", "password": "..." }
-  - Réponse: { "token": "eyJhbGci...", "user": { "id": 17, "nom": "Professeur Moustafa", "role": "prof" } }
+- Modifier un profil (Update) :
+  PUT http://localhost:3000/api/auth/update/:id
+  Headers : Authorization: Bearer <TOKEN>
+  Body JSON : {"nom":"Michel Nouveau", "password":"nouveau_password"}
 
-[UPDATE] PUT /api/auth/users/:id
-  - Description: Modifier un profil.
-  - Log: "Modification de l'examen ID 1" (ou modification user).
+- Supprimer un compte (Delete) :
+  DELETE http://localhost:3000/api/auth/delete/:id
+  Headers : Authorization: Bearer <TOKEN>
 
-[DELETE] DELETE /api/auth/users/:id
-  - Description: Supprimer un utilisateur.
-  - Exemple Log: "A supprimé l'utilisateur ID 16".
 
-[ACTION] POST /api/auth/logout
-  - Description: Déconnexion et enregistrement final.
-  - Header: Authorization: Bearer <votre_token>
-  - Réponse: {"message": "Déconnexion réussie et log enregistrée"}.
+2. GESTION DES EXAMENS (Exams - CRUD COMPLET)
+----------------------------------------------
+- Ajouter un examen (Create) :
+  POST http://localhost:3000/api/exams/add
+  Headers : Authorization: Bearer <TOKEN>
+  Body : {"title":"Examen IA", "file_path":"sujet_ia_2025.pdf"}
 
------------------------------------------------------------
-2. GESTION DES EXAMENS (CRUD)
------------------------------------------------------------
+- Voir tous les examens (Read) :
+  GET http://localhost:3000/api/exams
+  Headers : Authorization: Bearer <TOKEN>
 
-[CREATE] POST /api/exams/create
-  - Body: { "titre", "description", "date_fin" }
-  - Exemple Log: "Création de l'examen : Examen Final..."
+- Télécharger un sujet d'examen :
+  GET http://localhost:3000/api/exams/download/sujet_ia_2025.pdf
+  Headers : Authorization: Bearer <TOKEN>
 
-[READ] GET /api/exams
-  - Description: Liste complète des examens disponibles.
+- Modifier un examen (Update) :
+  PUT http://localhost:3000/api/exams/update/:id
+  Headers : Authorization: Bearer <TOKEN>
+  Body : {"title":"Examen IA Modifié"}
 
-[DELETE] DELETE /api/exams/:id
-  - Description: Suppression d'un examen par un Professeur.
+- Supprimer un examen (Delete) :
+  DELETE http://localhost:3000/api/exams/delete/:id
+  Headers : Authorization: Bearer <TOKEN>
 
------------------------------------------------------------
-3. TRAVAUX & UPLOADS (FILES)
------------------------------------------------------------
 
-[CREATE] POST /api/works
-  - Description: Upload d'un travail par l'étudiant.
-  - Format: Multipart/Form-Data (Champ "file").
-  - Exemple Log: "Sidi a rendu son travail".
+3. GESTION DES TRAVAUX (Works - Soumission)
+-------------------------------------------
+- Soumettre/Uploader une réponse (Étudiant) :
+  POST http://localhost:3000/api/works/submit
+  Headers : Authorization: Bearer <TOKEN>
+  Form-data : reponse=@michel_examen.txt
 
-[READ] GET /api/works/download/:filename
-  - Description: Téléchargement du fichier par le professeur.
-  - Exemple: /api/works/download/24099-test.sh
+- Voir tous les travaux rendus (Enseignant uniquement) :
+  GET http://localhost:3000/api/works/all
+  Headers : Authorization: Bearer <TOKEN>
 
-[STORAGE INFO]
-  - Dossier Examens: src/uploads/exams/
-  - Dossier Travaux: src/uploads/work/
+- Vérifier/Télécharger un rendu :
+  GET http://localhost:3000/api/works/download/24133-michel_examen.txt
+  Headers : Authorization: Bearer <TOKEN>
 
------------------------------------------------------------
-4. AUDIT & MONITORING (LOGS)
------------------------------------------------------------
 
-[READ] GET /api/logs
-  - Description: Historique complet des actions système.
-  - Exemple d'entrée: 
-    {
-      "id": 29,
-      "matricule": "moustafa1@supnum.mr",
-      "action": "Déconnexion réussie",
-      "timestamp": "28/12/2025 18:01:14"
-    }
+4. JOURNAUX (Logs)
+------------------
+- Consulter l'historique :
+  GET http://localhost:3000/api/logs
+  Headers : Authorization: Bearer <TOKEN>
 
------------------------------------------------------------
-5. CODES ERREURS COMMUNS
------------------------------------------------------------
-- 401: Unauthorized (Token absent ou invalide).
-- 404: Route ou ressource non trouvée (Ex: {"message":"Route non trouvée"}).
-- 500: Erreur Interne du serveur (Base de données SQLite).
-===========================================================
+
+==========================================================
+DÉTAILS TECHNIQUES
+==========================================================
+- Format Nommage : {matricule}-{nom_original}
+- Exemple : 24133-michel_examen.txt
+- Sécurité : Bearer Token obligatoire pour toutes les actions CRUD
+==========================================================
