@@ -38,16 +38,31 @@ const User = {
     },
 
     
-    update: function(id, userData, callback) {
-        const { email, role, inActive } = userData;
-        const sql = `UPDATE users SET email = ?, role = ?, inActive = ? WHERE id = ?`;
-        
-        db.run(sql, [email, role, inActive, id], function(err) {
-            callback(err, this.changes); 
-            
-        });
-    },
 
+
+update: function(id, userData, callback) {
+    this.findById(id, (err, currentUser) => {
+        if (err || !currentUser) return callback(err);
+
+        const email = userData.email || currentUser.email;
+        const role = userData.role || currentUser.role;
+        const inActive = (userData.inActive !== undefined) ? userData.inActive : currentUser.inActive;
+        const nom = userData.nom; 
+
+        const sqlUser = `UPDATE users SET email = ?, role = ?, inActive = ? WHERE id = ?`;
+        db.run(sqlUser, [email, role, inActive, id], (errU) => {
+            if (errU) return callback(errU);
+
+            if (role === 'etudiant') {
+                db.run(`UPDATE profile SET nom = ?, email = ? WHERE id_user = ?`, [nom, email, id], callback);
+            } else if (role === 'prof') {
+                db.run(`UPDATE ens SET noms = ?, email = ? WHERE email = ?`, [nom, email, currentUser.email], callback);
+            } else {
+                callback(null);
+            }
+        });
+    });
+},
     
     delete: function(id, callback) {
         const sql = `DELETE FROM users WHERE id = ?`;
