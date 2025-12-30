@@ -1,4 +1,19 @@
+# Dépendances
 node_modules/
-database.db
+
+# Fichiers téléchargés (on ne veut pas uploader les rapports de test)
+uploads/exams/*
+uploads/works/*
+!uploads/exams/.gitkeep
+!uploads/works/.gitkeep
+
+# Base de données locale
 *.db
-*.sqlite
+*.db-journal
+
+# Environnement
+.env
+
+# Logs
+logs/
+*.log

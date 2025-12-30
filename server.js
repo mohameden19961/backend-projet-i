@@ -2,6 +2,7 @@ const http = require('http');
 const app = require('./src/app');
 const db = require('./src/database/db'); 
 
+
 const PORT = 3000;
 const server = http.createServer(app);
 

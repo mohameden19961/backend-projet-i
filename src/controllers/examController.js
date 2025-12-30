@@ -2,7 +2,8 @@ const Examen = require('../models/Examen');
 const Log = require('../models/Log'); 
 
 exports.createExam = (req, res) => {
-    const { titre, description, date_fin, sujet_path } = req.body;
+    const { titre, description, date_fin} = req.body;
+    const sujet_path = req.file ? req.file.path : null;
 
     if (!sujet_path) {
         return res.status(400).json({ error: "Le champ sujet_path est obligatoire" });
@@ -25,9 +26,20 @@ exports.createExam = (req, res) => {
 };
 
 exports.getAllExams = (req, res) => {
-    Examen.findAll((err, exams) => {
-        if (err) return res.status(500).json({ error: "Erreur de récupération" });
-        res.status(200).json(exams);
+    // Utilisation du modèle au lieu de 'db' directement
+    Examen.findAll((err, rows) => {
+        if (err) {
+            console.error("Erreur SQL:", err.message);
+            return res.status(500).json({ error: "Erreur lors de la récupération des examens" });
+        }
+
+        // Transformation des chemins en URLs cliquables
+        const examsWithUrls = rows.map(exam => ({
+            ...exam,
+            sujet_url: `${req.protocol}://${req.get('host')}/${exam.sujet_path}`
+        }));
+
+        res.json(examsWithUrls);
     });
 };
 
@@ -56,3 +68,4 @@ exports.deleteExam = (req, res) => {
         res.json({ message: "Examen supprimé avec succès" });
     });
 };
+
