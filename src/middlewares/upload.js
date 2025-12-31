@@ -17,8 +17,7 @@ const storage = multer.diskStorage({
         const extension = path.extname(file.originalname);
         
         if (isExam) {
-            // On récupère le titre depuis req.body
-            // On remplace les espaces par des tirets pour l'URL
+           
             const matiere = req.body.titre ? req.body.titre.replace(/\s+/g, '-').toLowerCase() : 'examen';
             
             cb(null, `${matiere}-${Date.now()}${extension}`);

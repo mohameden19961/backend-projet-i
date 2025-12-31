@@ -26,14 +26,12 @@ exports.createExam = (req, res) => {
 };
 
 exports.getAllExams = (req, res) => {
-    // Utilisation du modèle au lieu de 'db' directement
     Examen.findAll((err, rows) => {
         if (err) {
             console.error("Erreur SQL:", err.message);
             return res.status(500).json({ error: "Erreur lors de la récupération des examens" });
         }
 
-        // Transformation des chemins en URLs cliquables
         const examsWithUrls = rows.map(exam => ({
             ...exam,
             sujet_url: `${req.protocol}://${req.get('host')}/${exam.sujet_path}`

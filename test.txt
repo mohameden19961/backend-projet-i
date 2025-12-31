@@ -13,7 +13,7 @@ DOCUMENTATION API COMPLÈTE - SYSTÈME D'EXAMENS (v1.0)
   Body JSON : {"email":"michel@supnum.mr","password":"123"}
 
 - Modifier un profil (Update) :
-  PUT http://localhost:3000/api/auth/update/:id
+  PUT http://localhost:3000/api/auth/users/:id
   Headers : Authorization: Bearer <TOKEN>
   Body JSON : {"nom":"Michel Nouveau", "password":"nouveau_password"}
 
@@ -25,7 +25,7 @@ DOCUMENTATION API COMPLÈTE - SYSTÈME D'EXAMENS (v1.0)
 2. GESTION DES EXAMENS (Exams - CRUD COMPLET)
 ----------------------------------------------
 - Ajouter un examen (Create) :
-  POST http://localhost:3000/api/exams/add
+  POST http://localhost:3000/api/exams/create
   Headers : Authorization: Bearer <TOKEN>
   Body : {"title":"Examen IA", "file_path":"sujet_ia_2025.pdf"}
 
