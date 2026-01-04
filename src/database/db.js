@@ -19,21 +19,27 @@ db.serialize(() => {
         role TEXT,
         inActive BOOLEAN DEFAULT 0
     )`);
+ 
+
+
 
     db.run(`CREATE TABLE IF NOT EXISTS profile (
         id_user INTEGER,
         email TEXT,
-        matricule TEXT,
+        matricule TEXT,  
         level TEXT,
         nom TEXT,
         FOREIGN KEY(id_user) REFERENCES users(id)
     )`);
+
+
 
     db.run(`CREATE TABLE IF NOT EXISTS ens (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         noms TEXT,
         email TEXT UNIQUE
     )`);
+
 
     db.run(`CREATE TABLE IF NOT EXISTS examen (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,6 +50,7 @@ db.serialize(() => {
     )`);
 
     
+
     db.run(`CREATE TABLE IF NOT EXISTS works (
         id_etud INTEGER,
         nb_files INTEGER,
@@ -54,6 +61,7 @@ db.serialize(() => {
     )`);
     
     
+
     db.run(`CREATE TABLE IF NOT EXISTS logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT,
@@ -62,6 +70,19 @@ db.serialize(() => {
     )`, (err) => {
         if (!err) console.log("Toutes les tables sont prêtes.");
     });
+
+
+    db.run(`CREATE TABLE IF NOT EXISTS salle (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom_salle TEXT,          -- ex: "Laboratoire 1"
+    examen_id INTEGER,       -- L'examen prévu dans cette salle
+    prof_id INTEGER,         -- Le prof surveillant
+    liste_etudiants TEXT,    -- IDs des étudiants (ex: "15,16,17")
+    status TEXT DEFAULT 'active', -- 'active' ou 'inActive'
+    FOREIGN KEY(examen_id) REFERENCES examen(id),
+    FOREIGN KEY(prof_id) REFERENCES users(id)
+)`);
 });
+
 
 module.exports = db;

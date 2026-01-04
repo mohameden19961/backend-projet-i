@@ -2,8 +2,9 @@ const Examen = require('../models/Examen');
 const Log = require('../models/Log'); 
 
 exports.createExam = (req, res) => {
-    const { titre, description, date_fin} = req.body;
+    const { titre, description, date_fin } = req.body;
     const sujet_path = req.file ? req.file.path : null;
+    const io = req.app.get('socketio'); 
 
     if (!sujet_path) {
         return res.status(400).json({ error: "Le champ sujet_path est obligatoire" });
@@ -15,6 +16,12 @@ exports.createExam = (req, res) => {
         const actionLog = `Création de l'examen : ${titre} (ID: ${examId})`;
         Log.add(req.user.email, actionLog, (logErr) => {
             if (logErr) console.error("Erreur Log:", logErr);
+
+            io.emit('new_exam_alert', { 
+                message: "Un nouvel examen a été publié !",
+                titre: titre,
+                date_limite: date_fin
+            });
 
             res.status(201).json({ 
                 message: "Examen créé et journalisé avec succès !", 
@@ -44,12 +51,15 @@ exports.getAllExams = (req, res) => {
 exports.updateExam = (req, res) => {
     const id = req.params.id;
     const { titre, description, date_fin, sujet_path } = req.body;
+    const io = req.app.get('socketio');
 
     Examen.update(id, { titre, description, date_fin, sujet_path }, (err, changes) => {
         if (err) return res.status(500).json({ error: "Erreur lors de la mise à jour" });
         
         if (changes === 0) return res.status(404).json({ message: "Examen non trouvé" });
         
+        io.emit('exam_updated', { id, titre });
+
         Log.add(req.user.email, `Modification de l'examen ID ${id}`);
         res.json({ message: "Examen mis à jour avec succès" });
     });
@@ -57,13 +67,16 @@ exports.updateExam = (req, res) => {
 
 exports.deleteExam = (req, res) => {
     const id = req.params.id; 
+    const io = req.app.get('socketio');
+
     Examen.delete(id, (err, changes) => {
         if (err) return res.status(500).json({ error: "Erreur BDD" });
         
         if (changes === 0) return res.status(404).json({ message: "Examen non trouvé" });
         
+        io.emit('exam_deleted', { id });
+
         Log.add(req.user.email, `Suppression de l'examen ID ${id}`);
         res.json({ message: "Examen supprimé avec succès" });
     });
 };
-

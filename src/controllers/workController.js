@@ -1,62 +1,90 @@
-const Work = require('../models/Work');
-const Log = require('../models/Log'); 
+const db = require('../database/db');
 const path = require('path');
 
 exports.submitWork = (req, res) => {
-    if (!req.user) return res.status(401).json({ error: "Non autorisé" });
+    const etudiant_matricule = req.user.matricule; 
+    const etudiant_id = req.user.id;
+    const { examen_id } = req.body;
+    const io = req.app.get('socketio'); 
 
-    const workData = {
-        id_etud: req.user.id,
-        nb_files: 1,
-        file_paths: req.file ? req.file.path : "uploads/default.pdf",
-        nom: req.user.nom,       
-        matricule: req.user.matricule 
-    };
+    const sqlCheckRoom = `SELECT liste_etudiants, status FROM salle WHERE examen_id = ?`;
+    
+    db.all(sqlCheckRoom, [examen_id], (err, salles) => {
+        if (err) return res.status(500).json({ message: "Erreur serveur SQL" });
 
-    Work.create(workData, (err) => {
-        if (err) return res.status(500).json({ error: "Erreur BDD", details: err.message });
+        if (!salles || salles.length === 0) {
+            return res.status(404).json({ message: "Aucune salle trouvée pour cet examen" });
+        }
 
-        
-const identite = req.user.nom || req.user.email;
-const actionLog = `${identite} a rendu son travail`;
+        const estAutorise = salles.some(salle => {
+            if (!salle.liste_etudiants) return false;
+            const liste = salle.liste_etudiants.split(',').map(m => m.trim());
+            return liste.includes(etudiant_matricule);
+        });
 
-        
-        Log.add(req.user.email, actionLog, (logErr) => {
-            if (logErr) {
-                console.error("Erreur lors de l'enregistrement du log :", logErr);
-            }
-            
-            res.status(201).json({ 
-                message: "Travail soumis avec succès !", 
-                file: req.file ? req.file.filename : "default" 
+        if (!estAutorise) {
+            const sqlLogRefuse = `INSERT INTO logs (email, action, timestamp) VALUES (?, ?, datetime('now'))`;
+            const actionRefus = `REFUS_ACCES_EXAM_${examen_id}_MATRICULE_${etudiant_matricule}`;
+            db.run(sqlLogRefuse, [req.user.email, actionRefus]);
+
+            io.to('teachers').emit('security_alert', {
+                type: 'UNAUTHORIZED_ACCESS',
+                user: req.user.email,
+                matricule: etudiant_matricule,
+                exam_id: examen_id,
+                time: new Date()
             });
+
+            return res.status(403).json({ message: "Accès refusé : Salle non autorisée" });
+        }
+
+        if (!req.file) return res.status(400).json({ message: "Aucun fichier détecté." });
+
+        
+        const sqlInsert = `INSERT INTO works (id_etud, file_paths, nom, matricule, last_update) VALUES (?, ?, ?, ?, datetime('now'))`;
+        db.run(sqlInsert, [etudiant_id, req.file.path, req.user.nom, etudiant_matricule || 'N/A'], function(err) {
+            if (err) return res.status(500).json({ message: "Erreur lors de l'enregistrement", error: err.message });
+
+            const sqlLog = `INSERT INTO logs (email, action, timestamp) VALUES (?, ?, datetime('now'))`;
+            const actionNom = `RENDU_SUCCES_EXAM_${examen_id}`;
+            db.run(sqlLog, [req.user.email, actionNom]);
+
+            io.emit('notification', { 
+                type: 'FILE_UPLOADED', 
+                message: `Nouveau rendu de ${req.user.nom} (Examen ${examen_id})` 
+            });
+
+            res.status(200).json({ message: "Travail soumis et consigné !", id: this.lastID });
         });
     });
 };
 
 exports.getAllWorks = (req, res) => {
-    if (req.user.role !== 'prof') {
-        return res.status(403).json({ error: "Accès refusé. Réservé aux enseignants." });
-    }
+    const prof_id = req.user.id; 
 
-    Work.findAll((err, works) => {
-        if (err) return res.status(500).json({ error: "Erreur lors de la récupération" });
-        res.status(200).json(works);
+    
+    const sql = `
+        SELECT DISTINCT w.* FROM works w
+        JOIN salle s ON s.liste_etudiants LIKE '%' || w.matricule || '%'
+        WHERE s.prof_id = ?
+        ORDER BY w.last_update DESC
+    `;
+
+    db.all(sql, [prof_id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        const sqlLog = `INSERT INTO logs (email, action, timestamp) VALUES (?, 'CONSULTATION_TRAVAUX_PROPRES', datetime('now'))`;
+        db.run(sqlLog, [req.user.email]);
+        
+        res.json(rows); 
     });
 };
 
-
 exports.downloadWork = (req, res) => {
-    if (req.user.role !== 'prof') {
-        return res.status(403).json({ error: "Accès interdit" });
-    }
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, '../../uploads/works', filename);
 
-    const fileName = req.params.filename;
-    const filePath = path.join(__dirname, '../../uploads/works', fileName);
-
-    res.download(filePath, (err) => {
-        if (err) {
-            res.status(404).json({ error: "Fichier non trouvé sur le serveur" });
-        }
-    });
+    const sqlLog = `INSERT INTO logs (email, action, timestamp) VALUES (?, ?, datetime('now'))`;
+    db.run(sqlLog, [req.user.email, `TELECHARGEMENT_${filename}`]);
+    res.download(filePath);
 };

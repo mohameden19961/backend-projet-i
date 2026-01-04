@@ -1,0 +1,65 @@
+# ==========================================================
+# 1. AUTHENTIFICATION ET COMPTES (Ahmed L2)
+# ==========================================================
+
+# Inscription : Ajout du champ "level" pour Ahmed
+curl -X POST http://localhost:3000/api/auth/register \
+     -H "Content-Type: application/json" \
+     -d '{"email":"ahmed@supnum.mr","password":"000","role":"etudiant","matricule":"24200","nom":"Ahmed","level":"L2"}'
+
+# Connexion : Pour récupérer le TOKEN actualisé
+curl -X POST http://localhost:3000/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"ahmed@supnum.mr","password":"000"}'
+
+# Modifier un profil (Update) - Utiliser l'ID retourné à l'inscription (ex: 15)
+curl -X PUT http://localhost:3000/api/auth/users/15 \
+     -H "Authorization: Bearer <TOKEN>" \
+     -H "Content-Type: application/json" \
+     -d '{"nom":"Ahmed Modifié", "password":"nouveau_password"}'
+
+
+# ==========================================================
+# 2. GESTION DES EXAMENS (Format Multipart/Form-data)
+# ==========================================================
+
+# Ajouter un examen (Create) : Correction des champs selon examController.js
+# Utilise -F pour envoyer le fichier physique "sujet"
+curl -X POST http://localhost:3000/api/exams/create \
+     -H "Authorization: Bearer <TOKEN>" \
+     -F "titre=Examen Java POO" \
+     -F "description=Héritage et Polymorphisme" \
+     -F "date_fin=2025-12-31" \
+     -F "sujet=@/home/abdy/Téléchargements/POO_JAVA/Exercice1/test.java"
+
+# Voir tous les examens (Read) - Utilise la route /all définie dans vos routes
+curl -X GET http://localhost:3000/api/exams/all \
+     -H "Authorization: Bearer <TOKEN>"
+
+# Supprimer un examen (Delete)
+curl -X DELETE http://localhost:3000/api/exams/ID_EXAMEN \
+     -H "Authorization: Bearer <TOKEN>"
+
+
+# ==========================================================
+# 3. GESTION DES TRAVAUX (Soumission PDF)
+# ==========================================================
+
+# Soumettre une réponse (Étudiant Ahmed)
+# Le fichier sera renommé automatiquement : 24200-TP2-Heritage.pdf
+curl -X POST http://localhost:3000/api/works/submit \
+     -H "Authorization: Bearer <TOKEN_AHMED>" \
+     -F "reponse=@/home/abdy/Téléchargements/TP2 Heritage.pdf"
+
+# Voir tous les travaux (Enseignant)
+curl -X GET http://localhost:3000/api/works/all \
+     -H "Authorization: Bearer <TOKEN_PROF>"
+
+
+# ==========================================================
+# 4. JOURNAUX (Logs)
+# ==========================================================
+
+# Consulter l'historique complet des actions (Créations, Soumissions)
+curl -X GET http://localhost:3000/api/logs \
+     -H "Authorization: Bearer <TOKEN>"
