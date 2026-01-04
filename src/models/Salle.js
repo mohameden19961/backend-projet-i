@@ -18,13 +18,11 @@ const Salle = {
         db.all(sql, [prof_id], callback);
     },
 
-    // Trouver une salle par son ID
     findById: (id, callback) => {
         const sql = `SELECT * FROM salle WHERE id = ?`;
         db.get(sql, [id], callback);
     },
 
-    // Supprimer une salle
     delete: (id, callback) => {
         const sql = `DELETE FROM salle WHERE id = ?`;
         db.run(sql, [id], function(err) {
